@@ -8,6 +8,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var compactModeMenuItem: NSMenuItem?
     private let engine = AXWindowEngine()
     private lazy var controller = TabGroupController(engine: engine)
+    private var permissionTimer: Timer?
+    private var hasStartedController = false
 
     func applicationDidFinishLaunching(_ notification: Notification) {
         guard ProcessInfo.processInfo.environment["XCTestConfigurationFilePath"] == nil else {
@@ -22,10 +24,27 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         guard trusted else {
             // Keep the menu item available while the user grants access.
             statusItem?.button?.appearsDisabled = true
+            permissionTimer = Timer.scheduledTimer(withTimeInterval: 1, repeats: true) { [weak self] _ in
+                MainActor.assumeIsolated { self?.startIfTrusted() }
+            }
             return
         }
+        startIfTrusted()
+    }
+
+    private func startIfTrusted() {
+        guard !hasStartedController, AXIsProcessTrusted() else { return }
+        permissionTimer?.invalidate()
+        permissionTimer = nil
+        hasStartedController = true
+        statusItem?.button?.appearsDisabled = false
         controller.start()
         NSLog("[Tabbed] controller started — global ⌘-drag monitor active")
+    }
+
+    func applicationWillTerminate(_ notification: Notification) {
+        permissionTimer?.invalidate()
+        if hasStartedController { controller.stop() }
     }
 
     // MARK: - Status bar
@@ -33,9 +52,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func setUpStatusItem() {
         let item = NSStatusBar.system.statusItem(withLength: NSStatusItem.variableLength)
         item.button?.image = NSImage(systemSymbolName: "rectangle.on.rectangle.angled",
-                                     accessibilityDescription: "Tabbed")
+                                     accessibilityDescription: "Tabbed Local")
         let menu = NSMenu()
-        menu.addItem(withTitle: "Tabbed", action: nil, keyEquivalent: "")
+        menu.addItem(withTitle: "Tabbed Local — Offline", action: nil, keyEquivalent: "")
         menu.addItem(.separator())
         let autoAddItem = menu.addItem(
             withTitle: "Auto-add New Windows to Stack",
@@ -64,7 +83,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(withTitle: "Open Accessibility Settings…",
                      action: #selector(openAXSettings), keyEquivalent: "").target = self
         menu.addItem(.separator())
-        menu.addItem(withTitle: "Quit Tabbed",
+        menu.addItem(withTitle: "Quit Tabbed Local",
                      action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q")
         item.menu = menu
         statusItem = item

@@ -16,6 +16,7 @@ final class TabGroupController: NSObject, DragMonitorDelegate {
     let windowCreationObserver = AXAppObserverBridge()
     private let dropIndicator = DropIndicatorPanel()
     let ownPID = ProcessInfo.processInfo.processIdentifier
+    private(set) var isRunning = false
 
     var config = TabbedConfig.load()
     lazy var keyboardMonitor: KeyboardShortcutMonitor = {
@@ -55,6 +56,8 @@ final class TabGroupController: NSObject, DragMonitorDelegate {
     }
 
     func start() {
+        guard !isRunning else { return }
+        isRunning = true
         dragMonitor.start()
         keyboardMonitor.start()
         observeSpaceChanges()
@@ -64,10 +67,37 @@ final class TabGroupController: NSObject, DragMonitorDelegate {
         }
     }
 
+    /// Stop observing and restore parked windows before a normal quit.
+    func stop() {
+        isRunning = false
+        dragMonitor.stop()
+        keyboardMonitor.stop()
+        endTrackingActiveMove()
+        resetDragState()
+        NSWorkspace.shared.notificationCenter.removeObserver(self)
+        appFocusObserver.unobserveAll()
+        windowCreationObserver.unobserveAll()
+        isApplyingLayout = true
+        for group in groups {
+            group.panel.hide()
+            for window in group.windows {
+                observer.unobserve(window.id)
+                if engine.isAlive(window) {
+                    engine.setFrame(group.contentFrame, of: window)
+                }
+            }
+        }
+        groups.removeAll()
+        mostRecentGroup = nil
+        isApplyingLayout = false
+    }
+
     /// Re-read `~/.config/tabbed.toml` and apply any keyboard-shortcut changes.
     func reloadConfig() {
         config = TabbedConfig.load()
-        keyboardMonitor.apply(settings: config.shortcuts)
+        if isRunning {
+            keyboardMonitor.apply(settings: config.shortcuts)
+        }
     }
 
     // MARK: - DragMonitorDelegate
@@ -104,7 +134,7 @@ final class TabGroupController: NSObject, DragMonitorDelegate {
         let dragged = draggedWindow
         resetDragState()
         DispatchQueue.main.async { [weak self] in
-            guard let self, let dragged else { return }
+            guard let self, self.isRunning, let dragged else { return }
             if let target = self.engine.window(at: point, excluding: [dragged.id]) {
                 self.formGroup(dragged: dragged, target: target)
             } else if let sourceGroup = self.group(containing: dragged.id) {

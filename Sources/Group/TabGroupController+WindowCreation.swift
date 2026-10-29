@@ -54,6 +54,7 @@ extension TabGroupController {
     }
 
     func resolveAndAutoAddWindow(pid: pid_t, element: AXUIElement, attemptsRemaining: Int) {
+        guard isRunning else { return }
         let candidates = engine.candidateWindowElements(from: element, pid: pid)
         let onScreen = Set(engine.onScreenWindowFrames(excluding: []).map { $0.id })
         let window = candidates

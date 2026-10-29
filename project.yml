@@ -10,11 +10,12 @@ settings:
     SWIFT_VERSION: "5.0"
     MARKETING_VERSION: "0.1.2"
     CURRENT_PROJECT_VERSION: "1"
-    DEVELOPMENT_TEAM: "W9C2P3N7Q2"
+    DEVELOPMENT_TEAM: ""
     CODE_SIGN_STYLE: Manual
-    CODE_SIGN_IDENTITY: "Apple Development: zxzimeng@gmail.com (4F7GA4MB42)"
+    CODE_SIGN_IDENTITY: "-"
     PROVISIONING_PROFILE_SPECIFIER: ""
     ENABLE_HARDENED_RUNTIME: YES
+    CODE_SIGN_INJECT_BASE_ENTITLEMENTS: NO
     SWIFT_STRICT_CONCURRENCY: minimal
 
 targets:
@@ -26,12 +27,17 @@ targets:
       - path: Resources
     settings:
       base:
-        PRODUCT_BUNDLE_IDENTIFIER: dev.local.Tabbed
+        PRODUCT_BUNDLE_IDENTIFIER: io.github.jvnbt.tabbed
+        PRODUCT_NAME: Tabbed Local
+        PRODUCT_MODULE_NAME: Tabbed
+        EXECUTABLE_NAME: Tabbed
         INFOPLIST_FILE: Resources/Info.plist
         CODE_SIGN_ENTITLEMENTS: Resources/Tabbed.entitlements
         SWIFT_OBJC_BRIDGING_HEADER: Sources/Accessibility/Tabbed-Bridging-Header.h
         COMBINE_HIDPI_IMAGES: YES
-        ENABLE_USER_SCRIPT_SANDBOXING: NO
+        ENABLE_USER_SCRIPT_SANDBOXING: YES
+    dependencies:
+      - sdk: libsandbox.tbd
 
   TabbedTests:
     type: bundle.unit-test
@@ -43,5 +49,5 @@ targets:
     settings:
       base:
         GENERATE_INFOPLIST_FILE: YES
-        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tabbed.app/$(BUNDLE_EXECUTABLE_FOLDER_PATH)/Tabbed"
+        TEST_HOST: "$(BUILT_PRODUCTS_DIR)/Tabbed Local.app/Contents/MacOS/Tabbed"
         BUNDLE_LOADER: "$(TEST_HOST)"

@@ -15,4 +15,7 @@ CGError CGSMoveWindowsToManagedSpace(CGSConnectionID cid, CFArrayRef windows, ui
 
 AXError _AXUIElementGetWindow(AXUIElementRef element, uint32_t *identifier);
 
+/// Apply the embedded, network-denying Seatbelt policy; -1 means fail closed.
+int tabbed_apply_network_sandbox(void);
+
 #endif /* TABBED_BRIDGING_HEADER_H */
