@@ -122,7 +122,10 @@ cannot guarantee window restoration.
 
 The installed app's Accessibility/control permission was observed enabled in
 System Settings. A live process sample showed the AppKit run loop servicing event
-tap messages with the network policy active. Interactive window grouping was not
-fully verified: the computer-use tool timed out while inspecting this menu-bar
-app. Automated checks do not establish compatibility with every app, full-screen
-mode, or monitor/Spaces configuration.
+tap messages with the network policy active. The user subsequently confirmed
+that grouping works with the installed fork. Automated interactive testing was
+limited by menu-bar inspection timeouts and modifier-drag automation support;
+tab switching and quit restoration were not separately verified through the UI.
+The cleanup regression test covers restoration logic. These checks do not
+establish compatibility with every app, full-screen mode, or monitor/Spaces
+configuration.
