@@ -120,6 +120,9 @@ cannot guarantee window restoration.
   launch of a locally compiled app requires no quarantine or policy override;
   no claim of Apple notarization or malware certification is made.
 
-Accessibility setup and interactive grouping validation are recorded separately
-once completed. Automated checks do not establish compatibility with every app,
-full-screen mode, or monitor/Spaces configuration.
+The installed app's Accessibility/control permission was observed enabled in
+System Settings. A live process sample showed the AppKit run loop servicing event
+tap messages with the network policy active. Interactive window grouping was not
+fully verified: the computer-use tool timed out while inspecting this menu-bar
+app. Automated checks do not establish compatibility with every app, full-screen
+mode, or monitor/Spaces configuration.
